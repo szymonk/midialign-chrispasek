@@ -31,6 +31,7 @@ class midi {
 		unsigned int trackCount();
 	private:
 		midi() {};
+		midi(const midi &) {};
 		void operator=(const midi &) {};
 		void * p;
 };
