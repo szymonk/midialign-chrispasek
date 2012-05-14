@@ -12,8 +12,10 @@ using namespace std;
 void run(char ** params) {
 	if ((!params[0]) || (!params[0][0]) || (params[0][0] == '-')) {
 		cerr << "\nUsage:\n" <<
-			"\tmidialign <input.midi> -auto <output.midi>\n" <<
-			"\tmidialign <input.midi> -bpm <bpm>x<multiplier> <output.midi>\n" <<
+			"\tmidialign <input.midi> [ ... options ... ] <output.midi>\n" <<
+			"\nOptions:\n" <<
+			"\t-auto                         find a matching tempo and align events\n" <<
+			"\t-bpm <bpm>[x<multiplier>]     align all events to this tempo\n" <<
 			"\n";
 		return;
 	}
@@ -33,8 +35,9 @@ void run(char ** params) {
 				int bpm = atoi(params[0]);
 				int x = string(params[0]).find('x');
 				if (x >= 0) bpm *= atoi(params[0]+x+1);
-				if ((x < 1) || (x > 1000000))
+				if ((bpm < 1) || (bpm > 1000000))
 					throw "Invalid parameter for '-bpm'!";
+				cerr << bpm << endl;
 				tracktempo t(1.0/bpm);
 				align_midi_events(*m, t);
 				saved = false;
