@@ -1,22 +1,42 @@
 
 #include "midi.hpp"
 
-midi::midi(const char *) {
-	throw 1;
-}
+#include <vector>
+using namespace std;
 
-bool midi::save(const char *) {
-	return false;
-}
+class pmidi {
+	public:
 
-track & midi::tracks(unsigned int) {
-	throw 1;
-}
+	pmidi(const char * fn) {
+	}
 
-const track & midi::tracks(unsigned int) const {
-	throw 1;
-}
+	~pmidi() {
+	}
 
-unsigned int midi::trackCount() {
-	return 0;
-}
+	bool save(const char * fn) {
+		return false;
+	}
+
+	track & tracks(unsigned int) {
+		throw "x";
+	}
+
+	const track & tracks(unsigned int) const {
+		throw "x";
+	}
+
+	unsigned int trackCount() {
+		return t.size();
+	}
+
+	private:
+
+	vector<char> t;
+};
+
+midi::midi(const char * fn) { p = new pmidi(fn); }
+midi::~midi() { delete ((pmidi *)p); }
+bool midi::save(const char * fn) { return ((pmidi *)p)->save(fn); }
+track & midi::tracks(unsigned int t) { return ((pmidi *)p)->tracks(t); }
+const track & midi::tracks(unsigned int t) const { return ((pmidi *)p)->tracks(t); }
+unsigned int midi::trackCount() { return ((pmidi *)p)->trackCount(); }

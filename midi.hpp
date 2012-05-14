@@ -24,6 +24,7 @@ class track {
 class midi {
 	public:
 		midi(const char *);
+		~midi();
 		bool save(const char *);
 		track & tracks(unsigned int);
 		const track & tracks(unsigned int) const;
