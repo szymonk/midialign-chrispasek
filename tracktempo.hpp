@@ -3,9 +3,14 @@
 
 class tracktempo {
 	public:
-		tracktempo();
+		tracktempo(double seconds_per_tick);
+		tracktempo(const tracktempo &);
+		~tracktempo();
+		tracktempo & operator=(const tracktempo &);
+		void addTempoMark(unsigned int tick, double seconds_per_tick);
+		void delTempoMark(unsigned int tick);
+		double getTickTime(unsigned int tick);
 	private:
-		void operator=(const tracktempo &) {};
 		void * p;
 };
 
