@@ -25,7 +25,7 @@ class pmidi {
 		throw "x";
 	}
 
-	unsigned int trackCount() {
+	unsigned int trackCount() const {
 		return t.size();
 	}
 
@@ -41,4 +41,4 @@ track & midi::tracks(unsigned int t)
 	{ return ((pmidi *)p)->tracks(t); }
 const track & midi::tracks(unsigned int t) const
 	{ return ((pmidi *)p)->tracks(t); }
-unsigned int midi::trackCount() { return ((pmidi *)p)->trackCount(); }
+unsigned int midi::trackCount() const { return ((pmidi *)p)->trackCount(); }
