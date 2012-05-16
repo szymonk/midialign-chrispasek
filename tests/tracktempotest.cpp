@@ -3,7 +3,7 @@
 
 #define FAIL printf("Test failed (%s, line %d)\n", __FILE__, __LINE__)
 
-int main(void) {
+int test1() {
 	tracktempo T(0.0);
 	T.addTempoMark(4, 1.0);
 	T.addTempoMark(2, 1.0);
@@ -35,8 +35,26 @@ int main(void) {
 	if ( T.readTempoMark(5) != 1.0) { FAIL; return 1; }
 	if ( T.readTempoMark(6) != 1.0) { FAIL; return 1; }
 
-	tracktempo S(1.0);
-	//~ if ( T!=S ) { printf("T==S\n"); return 1; }
+	return 0;
+}
+
+int test2() {
+	tracktempo A(1.0);
+	tracktempo B(1.0);
+	if (A != B) { FAIL; return 1; }
+	if (!(A == B)) { FAIL; return 1; }
+	B.addTempoMark(1, 1.0);
+	if (A != B) { FAIL; return 1; }
+	A.addTempoMark(10, 2.0);
+	if (A == B) { FAIL; return 1; }
+	if (!(A != B)) { FAIL; return 1; }
+
+	return 0;
+}
+
+int main(void) {
+	if (test1()) return 1;
+	if (test2()) return 1;
 
 	return 0;
 }
