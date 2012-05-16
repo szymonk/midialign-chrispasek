@@ -23,15 +23,17 @@ void dump_track_stderr(const track & t, int tnum) {
 	for (unsigned int i = 0; i < t.eventCount(); i++) {
 		event const  & e = t.events(i);
 		e.getDescription(buf, 256);
+		double s = t.getTrackTempo().getTickTime(e.getStartTicks());
 		if (e.isNote()) {
+			double d = t.getTrackTempo().getTickTime(
+				e.getStartTicks()+e.getDurationTicks())-s;
 			cerr << "\t\tnote:  ticks [" << e.getStartTicks() << "-" <<
 				(e.getStartTicks()+e.getDurationTicks()) <<
-				"], time [" << e.getStart() << "s-" <<
-				(e.getStart()+e.getDuration()) <<
+				"], time [" << s << "s-" << d <<
 				"s]\n\t\t       " << buf << endl;
 		} else {
 			cerr << "\t\tevent: tick [" << e.getStartTicks() <<
-				"], time [" << e.getStart() <<
+				"], time [" << s <<
 				"s]\n\t\t       " << buf << endl;
 		}
 	}
