@@ -106,34 +106,34 @@ class pevent : public event {
 		if (raw != NULL) delete [] raw;
 	}
 
-	virtual int getStartTicks() { return start; }
+	virtual int getStartTicks() const { return start; }
 
-	virtual int getDurationTicks() {
+	virtual int getDurationTicks() const {
 		if (! isNote())
 			throw "Unable to get duration ticks for a non-note event.";
 		else
 			return len;
 	}
 
-	virtual double getStart() {
+	virtual double getStart() const {
 		return home->getTrackTempo().getTickTime(start);
 	}
 
-	virtual double getDuration() {
+	virtual double getDuration() const {
 		return home->getTrackTempo().getTickTime(start + len) -
 		       home->getTrackTempo().getTickTime(start);
 	}
 
-	virtual bool isNote() {
+	virtual bool isNote() const {
 		if (rawlen == 0) return false;
 		return (getCommand() == CMD_NOTE_ON);
 	}
 
-	uint8_t getCommand() {
+	uint8_t getCommand() const {
 		return (raw[0] >> 4);
 	}
 
-	uint8_t getMetaCommand() {
+	uint8_t getMetaCommand() const {
 		if (getCommand() != CMD_META_EVENT)
 			throw "getMetaCommand: Not a meta command!";
 		return (raw[1] == META_TEMPO_CHANGE);
@@ -369,7 +369,7 @@ class ptrack : public track {
 		return eventsCol[i];
 	}
 
-	virtual const tracktempo & getTrackTempo() {
+	virtual const tracktempo & getTrackTempo() const {
 		return thisTracktempo;
 	}
 
@@ -377,7 +377,7 @@ class ptrack : public track {
 		thisTracktempo = t;
 	}
 
-	virtual unsigned int eventCount() {
+	virtual unsigned int eventCount() const {
 		return eventsCol.size();
 	}
 
