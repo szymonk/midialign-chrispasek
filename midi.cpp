@@ -133,13 +133,22 @@ class pevent : public event {
 		if (raw != NULL) delete [] raw;
 	}
 
-	virtual int getStartTicks() const { return start; }
+	virtual tick_t getStartTicks() const { return start; }
 
-	virtual int getDurationTicks() const {
+	virtual tick_t getDurationTicks() const {
 		if (! isNote())
 			throw "Unable to get duration ticks for a non-note event.";
 		else
 			return len;
+	}
+
+	virtual void setStartTicks(tick_t ticks) { start = ticks; }
+
+	virtual void setDurationTicks(tick_t ticks) {
+		if (! isNote())
+			throw "Unable to get duration ticks for a non-note event.";
+		else
+			len = ticks;
 	}
 
 	virtual double getStart() const {

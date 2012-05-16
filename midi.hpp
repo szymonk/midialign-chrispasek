@@ -5,10 +5,11 @@
 
 class event {
 	public:
-		virtual int getStartTicks() const = 0;
-		virtual int getDurationTicks() const = 0;
-		virtual double getStart() const = 0;
-		virtual double getDuration() const = 0;
+		virtual tick_t getStartTicks() const = 0;
+		virtual tick_t getDurationTicks() const = 0;
+		virtual void setStartTicks(tick_t) = 0;
+		virtual void setDurationTicks(tick_t) = 0;
+
 		virtual bool isNote() const = 0;
 		virtual void getDescription(char * /*buffer*/, unsigned int /*length*/) const = 0;
 };
