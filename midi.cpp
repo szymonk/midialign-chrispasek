@@ -231,6 +231,8 @@ class ptrack : public track {
 		eventsCol.clear();
 		uint32_t remaining = getUint32_t(in);
 		tick_t globalTicks = 0;
+		uint8_t rawbuf[260];
+		rawbuf[0] = 0xFF;
 		while (remaining > 0) {
 			uint8_t x;
 
@@ -252,18 +254,27 @@ class ptrack : public track {
 			globalTicks += deltaTicks;
 
 			/* Read event description: command and data. */
-			uint8_t rawbuf[260];
+			uint8_t previousCommand = rawbuf[0];
+			int runningMode = 0;
 			in.read((char *) rawbuf, 1);
 			--remaining;
+			// Check if we have a running event.
+			if ((rawbuf[0] & 0x80) == (uint8_t) 0) {
+				//rawbuf[0] = (rawbuf[0] & 0xF);
+				//rawbuf[0] = (rawbuf[0] | (previousCommand & 0xF0));
+				rawbuf[1] = rawbuf[0]; // pass this byte as command's argument
+				rawbuf[0] = previousCommand; // treat this command the same as previous one
+				runningMode = 1;
+			}
 
 			pevent ev(globalTicks, this);
 			bool skip = false;
 			ev.start = globalTicks;
 			switch (rawbuf[0] >> 4) {
 				case CMD_NOTE_OFF:
-					in.read((char *) rawbuf + 1, 2);
+					in.read((char *) rawbuf + 1 + runningMode, 2 - runningMode);
 					ev.setRaw(rawbuf, rawbuf + 3);
-					remaining -= 2;
+					remaining -= 2 - runningMode;
 					
 					{
 						__typeof__(eventsCol.rbegin()) noteOn = eventsCol.rbegin();
@@ -278,26 +289,26 @@ class ptrack : public track {
 					}
 					break;
 				case CMD_NOTE_ON:
-					in.read((char *) rawbuf + 1, 2);
+					in.read((char *) rawbuf + 1 + runningMode, 2 - runningMode);
 					ev.setRaw(rawbuf, rawbuf + 3);
-					remaining -= 2;
+					remaining -= 2 - runningMode;
 					break;
 				case CMD_KEY_AFTER_TOUCH:
 				case CMD_CONTROL_CHANGE:
 				case CMD_PITCH_WHEEL_CHANGE:
-					in.read((char *) rawbuf + 1, 2);
+					in.read((char *) rawbuf + 1 + runningMode, 2 - runningMode);
 					ev.setRaw(rawbuf, rawbuf + 3);
-					remaining -= 2;
+					remaining -= 2 - runningMode;
 					break;
 				case CMD_PROGRAM_CHANGE:
 				case CMD_CHANNEL_AFTER_TOUCH:
-					in.read((char *) rawbuf + 1, 1);
+					in.read((char *) rawbuf + 1 + runningMode, 1 - runningMode);
 					ev.setRaw(rawbuf, rawbuf + 2);
-					remaining -= 1;
+					remaining -= 1 - runningMode;
 					break;
 				case CMD_META_EVENT:
-					in.read((char *) rawbuf + 1, 2);
-					remaining -= 2;
+					in.read((char *) rawbuf + 1 + runningMode, 2 - runningMode);
+					remaining -= 2 - runningMode;
 					if (rawbuf[1] == META_TEMPO_CHANGE) {
 						// Handle tempo change.
 						uint32_t mspq = getUint24_t(in); // microsec per quarter note
@@ -305,7 +316,8 @@ class ptrack : public track {
 						thisTracktempo.addTempoMark(ev.start, ((double) mspq) / ((double) tpq));
 					}
 					else {
-						in.read((char *) rawbuf + 3, rawbuf[2]);
+						if (rawbuf[2] > 0)
+							in.read((char *) rawbuf + 3, rawbuf[2]);
 					}
 					remaining -= rawbuf[2];
 					ev.setRaw(rawbuf, rawbuf + 3 + rawbuf[2]);
