@@ -28,6 +28,7 @@
 #define CMD_META_EVENT             0xF
 
 #define META_TEMPO_CHANGE          0x51
+#define META_TRACK_END             0x2F
 
 const char * FILE_FORMAT[] = {
 	"single-track",
@@ -162,7 +163,7 @@ class pevent : public event {
 	uint8_t getMetaCommand() const {
 		if (getCommand() != CMD_META_EVENT)
 			throw "getMetaCommand: Not a meta command!";
-		return (raw[1] == META_TEMPO_CHANGE);
+		return raw[1];
 	}
 
 	/**
@@ -236,7 +237,7 @@ class pevent : public event {
 		if (raw != NULL) delete [] raw;
 		rawlen = 6;
 		raw = new uint8_t[rawlen];
-		raw[0] = CMD_META_EVENT;
+		raw[0] = (EVENT_COMMAND_MASK | CMD_META_EVENT);
 		raw[1] = META_TEMPO_CHANGE;
 		raw[2] = (uint8_t) 3;
 		setUint24_t(msecPerQuarter, raw + 3);
@@ -299,7 +300,13 @@ ostream& operator<<(ostream& out, const pevent& ev) {
 	return out;
 }
 
-inline bool startCmp(pevent a, pevent b) {
+bool startCmp(pevent a, pevent b) {
+	// first things first
+	if (a.start != b.start) return a.start < b.start;
+	if (a.getCommand() == CMD_META_EVENT && a.getMetaCommand() == META_TRACK_END)
+		return false;
+	if (b.getCommand() == CMD_META_EVENT && b.getMetaCommand() == META_TRACK_END)
+		return true;
 	return a.start < b.start;
 }
 
@@ -447,7 +454,7 @@ class ptrack : public track {
 	}
 
 
-	void save(ostream &out) {
+	int save(ostream &out) {
 		vector<pevent> saveEvents(eventsCol.begin(), eventsCol.end());
 
 		for (__typeof__(eventsCol.begin()) it = eventsCol.begin(); it != eventsCol.end(); it++) {
@@ -477,11 +484,33 @@ class ptrack : public track {
 		uint32_t totalLen = 4;
 		out.write("MTrk", 4);
 		printUint32_t(0xdeadbeef, out); // print length placeholder
+		totalLen += 4;
 		
-		for (__typeof__(saveEvents.begin()) it = saveEvents.begin(); it != saveEvents.end(); it++) {
+		for (__typeof__(saveEvents.begin()) it = saveEvents.begin(),
+			                prev = saveEvents.begin(); it != saveEvents.end(); it++) {
+			tick_t delta_tick = it->start - prev->start;
+			uint32_t delta = (uint32_t) delta_tick;
+			vector<uint8_t> deltav;
+			do
+			{
+				if (delta >= 0x80) {
+					int msb = 31 - __builtin_clz(delta);
+					deltav.push_back((delta >> (msb - 7)) | 0x80);
+					delta = (delta & ((1 << (msb - 7 + 1)) - 1));
+				}
+				else {
+					deltav.push_back(delta);
+					delta = 0;
+				}
+			} while (delta != 0);
+			for (unsigned i = 0; i < deltav.size(); ++i)
+				out.put((char) deltav[i]);
+
+			totalLen += deltav.size();
 			totalLen += it->getRawLen();
 			out << (*it);
 		}
+		return totalLen;
 	}
 
 	virtual event & events(unsigned int i) {
@@ -544,7 +573,7 @@ class pmidi {
 		for (unsigned i = 0; i < tracksCount; ++i)
 			t[i].load(in, tpq);
 
-		if (getFileFormat() == 1) {
+		/*if (getFileFormat() == 1) {
 			tracktempo mergedTracktempo(0.0);
 			for (unsigned i = 0; i < tracksCount; ++i) {
 				tick_t tempoMark = 0;
@@ -557,7 +586,7 @@ class pmidi {
 			}
 			for (unsigned i = 0; i < tracksCount; ++i)
 				t[i].thisTracktempo = mergedTracktempo;
-		}
+		}*/
 
 		in.close();
 	}
@@ -569,8 +598,16 @@ class pmidi {
 		ofstream out(fn, ios_base::out | ios_base::binary);
 		if (out.fail()) return false;
 		out.write((char *) header, 14);
+		int lengths[trackCount()];
 		for (unsigned i = 0; i < trackCount(); ++i)
-			t[i].save(out);
+			lengths[i] = t[i].save(out);
+		out.seekp(14, ios_base::beg);
+		for (unsigned i = 0; i < trackCount(); ++i) {
+			out.seekp(4, ios_base::cur);
+			printUint32_t(lengths[i] - 8, out);
+			out.seekp(lengths[i] - 8, ios_base::cur);
+		}
+
 		out.close();
 		return out.fail();
 	}
