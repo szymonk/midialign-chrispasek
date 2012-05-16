@@ -40,5 +40,5 @@ void tracktempo::addTempoMark(unsigned int tick, double seconds_per_tick)
 	{ return ((ptracktempo *)p)->addTempoMark(tick, seconds_per_tick); }
 void tracktempo::delTempoMark(unsigned int tick)
 	{ return ((ptracktempo *)p)->delTempoMark(tick); }
-double tracktempo::getTickTime(unsigned int tick)
+double tracktempo::getTickTime(unsigned int tick) const
 	{ return ((ptracktempo *)p)->getTickTime(tick); }
