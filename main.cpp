@@ -9,7 +9,7 @@ using namespace std;
 #include "align_midi_events.hpp"
 #include "find_nice_tempo.hpp"
 
-void run(char ** params) {
+bool run(char ** params) {
 	if ((!params[0]) || (!params[0][0]) || (params[0][0] == '-')) {
 		cerr << "\nUsage:\n" <<
 			"\tmidialign <input.midi> [ ... options ... ] <output.midi>\n" <<
@@ -17,10 +17,10 @@ void run(char ** params) {
 			"\t-auto                         find a matching tempo and align events\n" <<
 			"\t-bpm <bpm>[x<multiplier>]     align all events to this tempo\n" <<
 			"\n";
-		return;
+		return false;
 	}
 	midi * m = 0;
-	bool saved = true;
+	bool saved = false;
 	while (params[0]) {
 		string p = params[0];
 		if (p[0] == '-') {
@@ -42,7 +42,8 @@ void run(char ** params) {
 				align_midi_events(*m, t);
 				saved = false;
 			} else {
-				throw ("Unknown option: "+p).c_str();
+				cerr << "Unknown option '" << p << "'!" << endl;
+				return false;
 			}
 		} else if (m) {
 			#ifdef DEBUG
@@ -54,12 +55,18 @@ void run(char ** params) {
 			#ifdef DEBUG
 				cerr << "Reading file'" << p << "'..." << endl;
 			#endif
-			m = new midi(p.c_str());
+			try {
+				m = new midi(p.c_str());
+			} catch(const char * e) {
+				cerr << "Could not open '" << p << "': " << e << endl;
+				return false;
+			}
 		}
 		params++;
 	}
 	if (!saved) dump_midi_stderr(*m);
 	if (m) delete m;
+	return true;
 }
 
 int main(int argc, char ** argv) {
@@ -67,12 +74,10 @@ int main(int argc, char ** argv) {
 		cerr << "Warning! This is a debug build." << endl;
 	#endif
 	try {
-		run(argv+1);
-		return 0;
+		return run(argv+1) ? 0 : 1;
 	} catch(const char * e) {
 		cerr << "Error! " << e << endl;
 	} catch(...) {
 		cerr << "Error! (unknown reason)" << endl;
 	}
-	return 1;
 }
