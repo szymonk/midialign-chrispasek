@@ -47,8 +47,6 @@ const char * cmd2str[] = {
 
 using namespace std;
 
-typedef unsigned long long tick_t;
-
 inline uint16_t getUint16_t(uint8_t * ptr, int offset) {
 	ptr += offset;
 	uint16_t v = *((uint16_t *) ptr);
