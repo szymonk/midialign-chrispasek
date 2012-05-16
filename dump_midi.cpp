@@ -29,7 +29,7 @@ void dump_track_stderr(const track & t, int tnum) {
 				e.getStartTicks()+e.getDurationTicks())-s;
 			cerr << "\t\tnote:  ticks [" << e.getStartTicks() << "-" <<
 				(e.getStartTicks()+e.getDurationTicks()) <<
-				"], time [" << s << "s-" << d <<
+				"], time [" << s << "s-" << s+d <<
 				"s]\n\t\t       " << buf << endl;
 		} else {
 			cerr << "\t\tevent: tick [" << e.getStartTicks() <<

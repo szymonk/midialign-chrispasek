@@ -9,6 +9,20 @@ using namespace std;
 #include "align_midi_events.hpp"
 #include "find_nice_tempo.hpp"
 
+void option_auto(midi & m) {
+	tracktempo t = find_nice_tempo(0, 0);
+	align_midi_events(m, t);
+}
+
+void option_bpm(midi & m, const char * param1) {
+	int bpm = atoi(param1);
+	int x = string(param1).find('x');
+	if (x >= 0) bpm *= atoi(param1+x+1);
+	if ((bpm < 1) || (bpm > 1000000)) throw "Invalid parameter for '-bpm'!";
+	tracktempo t(1.0/bpm);
+	align_midi_events(m, t);
+}
+
 bool run(char ** params) {
 	if ((!params[0]) || (!params[0][0]) || (params[0][0] == '-')) {
 		cerr << "\nUsage:\n" <<
@@ -25,21 +39,13 @@ bool run(char ** params) {
 		string p = params[0];
 		if (p[0] == '-') {
 			if (p == "-auto") {
-				tracktempo t = find_nice_tempo(0, 0);
-				align_midi_events(*m, t);
+				option_auto(*m);
 				saved = false;
 			} else if (p == "-bpm") {
 				params++;
 				if (!params[0])
 					throw "Option '-bpm' requires a parameter!";
-				int bpm = atoi(params[0]);
-				int x = string(params[0]).find('x');
-				if (x >= 0) bpm *= atoi(params[0]+x+1);
-				if ((bpm < 1) || (bpm > 1000000))
-					throw "Invalid parameter for '-bpm'!";
-				cerr << bpm << endl;
-				tracktempo t(1.0/bpm);
-				align_midi_events(*m, t);
+				option_bpm(*m, params[0]);
 				saved = false;
 			} else {
 				cerr << "Unknown option '" << p << "'!" << endl;

@@ -27,9 +27,9 @@ void align_midi_event(event & e, const tracktempo & oldtempo,
 		tick_t duration_ticks = nearest_tick(newtempo,
 			newtempo.getTickTime(start_ticks)+d) - start_ticks;
 		if (duration_ticks < 1) duration_ticks = 1;
-		//d.setDurationTicks(duration_ticks);
+		e.setDurationTicks(duration_ticks);
 	}
-	//e.setStartTicks(start_ticks);
+	e.setStartTicks(start_ticks);
 }
 
 void align_midi_events(midi & m, const tracktempo & newtempo) {
@@ -38,6 +38,7 @@ void align_midi_events(midi & m, const tracktempo & newtempo) {
 		for (unsigned int j = 0; j < m.tracks(i).eventCount(); j++) {
 			align_midi_event(m.tracks(i).events(j),
 				oldtempo, newtempo);
+			m.tracks(i).setTrackTempo(newtempo);
 		}
 	}
 }
