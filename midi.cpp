@@ -474,9 +474,9 @@ class ptrack : public track {
 		tick_t tempoMark = 0;
 		do
 		{
-			double msecPerTick = thisTracktempo.readTempoMark(tempoMark);
-			double msecPerQuarter = msecPerTick * ((double) tpq);
-			uint32_t msecPerQuarterInt= (uint32_t) floor(msecPerQuarter + 0.5);
+			double secPerTick = thisTracktempo.readTempoMark(tempoMark);
+			double secPerQuarter = secPerTick * ((double) tpq);
+			uint32_t msecPerQuarterInt= (uint32_t) floor((1000000 * secPerQuarter) + 0.5);
 
 			pevent tempoChange(tempoMark, this);
 			tempoChange.assignTempoMark(msecPerQuarterInt);
