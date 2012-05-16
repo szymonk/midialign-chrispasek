@@ -3,11 +3,13 @@
 
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <iostream>
 #include <stdint.h>
 #include <cstring>
 #include <algorithm>
 #include <cassert>
+#include <cmath>
 
 #define EVENT_COMMAND_MASK         0xF0
 #define EVENT_CHANNEL_MASK         0xF
@@ -84,11 +86,24 @@ uint32_t getUint24_t(uint8_t * in) {
 	return result;
 }
 
+void setUint24_t(uint32_t val, uint8_t * out) {
+	for (int i = 2; i >= 0; --i) {
+		out[i] = (val & 0x000000FF);
+		val >>= 8;
+	}
+}
+
+void printUint32_t(uint32_t val, ostream& out) {
+	for (int i = 24; i >= 0; i -= 8) {
+		out.put((char) ((val >> i) & 0x000000FF));
+		//out << (val & 0x000000FF);
+	}
+}
 
 class pevent : public event {
 	public:
 
-	pevent() : len(0), pairVelocity(0), raw(NULL), rawlen(0) {}
+	pevent() : len(0), pairVelocity(0), raw(NULL), rawlen(0), home(NULL)  {}
 	pevent(tick_t start, track * home)
 		: start(start), len(0), pairVelocity(0), raw(NULL), rawlen(0), home(home) {}
 	pevent(const pevent& o) {
@@ -169,6 +184,25 @@ class pevent : public event {
 		return true;*/
 	}
 
+	void getDescription(char * buffer, unsigned int length) const {
+		stringstream ss(stringstream::in | stringstream::out);
+		ss << "Event type: " << cmd2str[getCommand()];
+		ss << ", start: " << start;
+		if (isNote()) {
+			ss << ", len: " << len;
+			ss.setf(ios::hex, ios::basefield);
+			ss << ", pitch: " << raw[2];
+		}
+		if (getCommand() == CMD_META_EVENT) {
+			ss.setf(ios::hex, ios::basefield);
+			ss << ", meta command: " << (int) raw[1];
+			if (getMetaCommand() == META_TEMPO_CHANGE) {
+				ss << ", META_TEMPO_CHANGE";
+			}
+		}
+		ss.getline(buffer, length);
+	}
+
 	template<class InputIterator>
 	void setRaw(InputIterator begin, InputIterator end) {
 		if (raw != NULL) delete [] raw;
@@ -177,7 +211,38 @@ class pevent : public event {
 		copy(begin, end, raw);
 	}
 
+	void assignNoteOff(const pevent &noteOn) {
+		if (! noteOn.isNote())
+			throw "assignNoteOff: given event is not a NOTE_ON event.";
+		if (raw != NULL) delete [] raw;
+		home = noteOn.home;
+		start = noteOn.start + noteOn.len;
+		len = pairVelocity = 0;
+		raw = new uint8_t[3];
+		rawlen = 3;
+		raw[0] = (noteOn.raw[0] & EVENT_CHANNEL_MASK);
+		raw[0] |= 0x80;
+		raw[1] = noteOn.raw[1];
+		raw[2] = noteOn.pairVelocity;
+	}
+
+	void assignTempoMark(uint32_t msecPerQuarter) {
+		if ((msecPerQuarter & ((uint32_t) 0xFF000000)) != 0) {
+			cerr << "Warning: truncated tempo mark!" << endl;
+		}
+		if (raw != NULL) delete [] raw;
+		rawlen = 6;
+		raw = new uint8_t[rawlen];
+		raw[0] = CMD_META_EVENT;
+		raw[1] = META_TEMPO_CHANGE;
+		raw[2] = (uint8_t) 3;
+		setUint24_t(msecPerQuarter, raw + 3);
+	}
+
+	size_t getRawLen() const { return rawlen; }
+
 	pevent& operator=(const pevent& rhs) {
+		if (this == &rhs) return *this;
 		//cerr << "AAA" << endl;
 		start = rhs.start;
 		len = rhs.len;
@@ -203,6 +268,9 @@ class pevent : public event {
 		return true;
 	}
 
+	friend ostream& operator<<(ostream&, const pevent&);
+
+
 
 	tick_t start;
 	tick_t len;
@@ -223,6 +291,15 @@ class pevent : public event {
 	track * home;
 };
 
+ostream& operator<<(ostream& out, const pevent& ev) {
+	out.write((char *) ev.raw, ev.rawlen);
+	return out;
+}
+
+inline bool startCmp(pevent a, pevent b) {
+	return a.start < b.start;
+}
+
 class ptrack : public track {
 	public :
 
@@ -231,7 +308,7 @@ class ptrack : public track {
 	void load(ifstream &in, uint16_t tpq) {
 		this->tpq = tpq;
 		// assume default 120 bpm => 2 quarter notes per second
-		thisTracktempo = tracktempo(1000000000.0/(2.0 * ((double) tpq)));
+		thisTracktempo = tracktempo(1.0/(2.0 * ((double) tpq)));
 		char sig[4];
 		in.read(sig, 4);
 		if (strncmp(sig, "MTrk", 4) != 0)
@@ -335,15 +412,9 @@ class ptrack : public track {
 			}
 #ifdef DEBUG
 			if (! skip) {
-				cerr << "Event type: " << cmd2str[ev.getCommand()];
-				cerr << ", start: " << ev.start;
-				if (ev.getCommand() == CMD_META_EVENT) {
-					cerr << ", meta command: " << (int) ev.raw[1];
-					if (ev.getMetaCommand() == META_TEMPO_CHANGE) {
-						cerr << ", META_TEMPO_CHANGE";
-					}
-				}
-				cerr << endl;
+				char buf[256];
+				ev.getDescription(buf, 256);
+				cerr << buf << endl;
 				cerr << "remaining bytes: " << remaining << endl;
 			}
 #endif
@@ -372,6 +443,44 @@ class ptrack : public track {
 #endif
 	}
 
+
+	void save(ostream &out) {
+		vector<pevent> saveEvents(eventsCol.begin(), eventsCol.end());
+
+		for (__typeof__(eventsCol.begin()) it = eventsCol.begin(); it != eventsCol.end(); it++) {
+			if (it->isNote()) {
+				pevent noteOff;
+				noteOff.assignNoteOff(*it);
+				saveEvents.push_back(noteOff);
+			}
+		}
+
+		tick_t tempoMark = 0;
+		do
+		{
+			double msecPerTick = thisTracktempo.readTempoMark(tempoMark);
+			double msecPerQuarter = msecPerTick * ((double) tpq);
+			uint32_t msecPerQuarterInt= (uint32_t) floor(msecPerQuarter + 0.5);
+
+			pevent tempoChange(tempoMark, this);
+			tempoChange.assignTempoMark(msecPerQuarterInt);
+			saveEvents.push_back(tempoChange);
+
+			tempoMark = thisTracktempo.nextTempoMarkAfter(tempoMark);
+		} while (tempoMark != 0);
+
+		stable_sort(saveEvents.begin(), saveEvents.end(), startCmp);
+
+		uint32_t totalLen = 4;
+		out.write("MTrk", 4);
+		printUint32_t(0xdeadbeef, out); // print length placeholder
+		
+		for (__typeof__(saveEvents.begin()) it = saveEvents.begin(); it != saveEvents.end(); it++) {
+			totalLen += it->getRawLen();
+			out << (*it);
+		}
+	}
+
 	virtual event & events(unsigned int i) {
 		return eventsCol[i];
 	}
@@ -397,6 +506,7 @@ class ptrack : public track {
 	vector<pevent> eventsCol;
 	tracktempo thisTracktempo;
 	uint16_t tpq;
+
 };
 
 class pmidi {
@@ -437,7 +547,13 @@ class pmidi {
 	}
 
 	bool save(const char * fn) {
-		return false;
+		ofstream out(fn, ios_base::out | ios_base::binary);
+		if (out.fail()) return false;
+		out.write((char *) header, 14);
+		for (unsigned i = 0; i < trackCount(); ++i)
+			t[i].save(out);
+		out.close();
+		return out.fail();
 	}
 
 	track & tracks(unsigned int i) {
