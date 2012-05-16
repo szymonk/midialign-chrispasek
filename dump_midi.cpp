@@ -6,14 +6,13 @@ using namespace std;
 
 void dump_tracktempo_stderr(const tracktempo & tt) {
 	cerr << "\ttempo:" << endl;
-	bool first = true;
-	for (tick_t i = 0;; i = tt.nextTempoMarkAfter(i)) {
-		if ((!i) && (!first)) break;
-		first = false;
+	tick_t i = 0;
+	do {
 		double v = tt.readTempoMark(i);
 		cerr << "\t\ttick " << i << ": " << v << "s/tick ("
 			<< (1/v) << " ticks/s)" << endl;
-	}
+		i = tt.nextTempoMarkAfter(i);
+	} while (i != 0);
 }
 
 void dump_track_stderr(const track & t, int tnum) {
