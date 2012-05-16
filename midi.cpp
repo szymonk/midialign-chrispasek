@@ -570,7 +570,7 @@ class pmidi {
 		for (unsigned i = 0; i < tracksCount; ++i)
 			t[i].load(in, tpq);
 
-		/*if (getFileFormat() == 1) {
+		if (getFileFormat() == 1) {
 			tracktempo mergedTracktempo(0.0);
 			for (unsigned i = 0; i < tracksCount; ++i) {
 				tick_t tempoMark = 0;
@@ -583,7 +583,7 @@ class pmidi {
 			}
 			for (unsigned i = 0; i < tracksCount; ++i)
 				t[i].thisTracktempo = mergedTracktempo;
-		}*/
+		}
 
 		in.close();
 	}
