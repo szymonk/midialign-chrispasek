@@ -33,9 +33,9 @@ class ptracktempo {
 			it->second = seconds_per_tick;
 		}
 	#ifdef DEBUG
-		for(it = tempoList.begin(); it!=tempoList.end(); it++){
-			printf("%llu %lf\n", it->first, it->second);
-		} printf("\n");
+		//~ for(it = tempoList.begin(); it!=tempoList.end(); it++){
+			//~ printf("%llu %lf\n", it->first, it->second);
+		//~ } printf("\n");
 	#endif	
 	}
 
@@ -52,9 +52,9 @@ class ptracktempo {
 			tempoList.erase(it);	//~ remove element
 		}
 	#ifdef DEBUG
-		for(it = tempoList.begin(); it!=tempoList.end(); it++){
-			printf("%llu %lf\n", it->first, it->second);
-		} printf("\n");
+		//~ for(it = tempoList.begin(); it!=tempoList.end(); it++){
+			//~ printf("%llu %lf\n", it->first, it->second);
+		//~ } printf("\n");
 	#endif
 	}
 
@@ -72,12 +72,13 @@ class ptracktempo {
 		}
 		total += (tick - prev_tick)*(prev_tempo);
 	#ifdef DEBUG
-		printf("%3llu %10lf\n", tick, total);
+		//~ printf("%3llu %10lf\n", tick, total);
 	#endif
 		return total;
 	}
 	
 	tick_t nextTempoMarkAfter(tick_t tick) const {
+		//~ list<tTempoMark>::const_iterator it = tempoList.begin();
 		__typeof__(tempoList.begin()) it = tempoList.begin();
 		while(it != tempoList.end() && it->first <= tick) {
 			it++;
@@ -89,6 +90,7 @@ class ptracktempo {
 	}
 	
 	double readTempoMark(tick_t tick) const {
+		//~ list<tTempoMark>::const_iterator it = tempoList.end();
 		__typeof__(tempoList.end()) it = tempoList.end();
 		do {
 			it--;
