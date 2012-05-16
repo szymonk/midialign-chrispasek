@@ -98,6 +98,19 @@ class ptracktempo {
 		return it->second;
 	}
 
+	bool operator==(const ptracktempo& b) const {
+		#ifdef DEBUG
+			//~ printf("#ptracktempo::operator== tempoList.size(): %d\n", (int)b.tempoList.size());
+			//~ printf("
+		#endif
+		return 1;
+	}
+
+	bool operator!=(const ptracktempo& b) const {
+		return ( !(*this==b));
+		return 1;
+	}
+
 	//~ TODO destructor if needed
 	//~ ~ptracktempo(){};
 
@@ -128,3 +141,8 @@ tick_t tracktempo::nextTempoMarkAfter(tick_t tick) const
 	{ return ((ptracktempo *)p)->nextTempoMarkAfter(tick); }
 double tracktempo::readTempoMark(tick_t tick) const
 	{ return ((ptracktempo *)p)->readTempoMark(tick); }
+
+bool tracktempo::operator==(const tracktempo& b) const
+	{ return ((ptracktempo *)p)->operator==( (*(ptracktempo *)b.p) ); }
+bool tracktempo::operator!=(const tracktempo& b) const
+	{ return ((ptracktempo *)p)->operator!=( (ptracktempo &)b.p ); }

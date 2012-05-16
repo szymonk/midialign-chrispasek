@@ -14,6 +14,8 @@ class tracktempo {
 		double getTickTime(tick_t tick) const;
 		tick_t nextTempoMarkAfter(tick_t tick) const;
 		double readTempoMark(tick_t tick) const;
+		bool operator==(const tracktempo& b) const;
+		bool operator!=(const tracktempo& b) const;
 	private:
 		void * p;
 };
