@@ -10,6 +10,7 @@ class event {
 		virtual double getStart() const = 0;
 		virtual double getDuration() const = 0;
 		virtual bool isNote() const = 0;
+		virtual void getDescription(char * /*buffer*/, unsigned int /*length*/) const = 0;
 };
 
 class track {
