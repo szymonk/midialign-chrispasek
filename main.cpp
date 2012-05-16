@@ -66,22 +66,6 @@ int main(int argc, char ** argv) {
 	#ifdef DEBUG
 		cerr << "Warning! This is a debug build." << endl;
 	#endif
-	//~ #ifdef DEBUG
-		//~ // testing tracktempo
-		//~ tracktempo T(0.0);
-		//~ T.addTempoMark(4, 3.0);
-		//~ T.addTempoMark(2, 1.0);
-		//~ T.addTempoMark(0, 2.0);
-		//~ T.delTempoMark(2);
-		//~ T.getTickTime(0);
-		//~ T.getTickTime(1);
-		//~ T.getTickTime(2);
-		//~ T.getTickTime(3);
-		//~ T.getTickTime(4);
-		//~ T.getTickTime(5);
-		//~ T.getTickTime(6);
-		//~ T.getTickTime(600);
-	//~ #endif
 	try {
 		run(argv+1);
 		return 0;
