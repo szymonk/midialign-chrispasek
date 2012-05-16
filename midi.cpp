@@ -190,10 +190,8 @@ class pevent : public event {
 
 	void getDescription(char * buffer, unsigned int length) const {
 		stringstream ss(stringstream::in | stringstream::out);
-		ss << "Event type: " << cmd2str[getCommand()];
-		ss << ", start: " << start;
+		ss << cmd2str[getCommand()];
 		if (isNote()) {
-			ss << ", len: " << len;
 			ss.setf(ios::hex, ios::basefield);
 			ss << ", pitch: " << raw[2];
 		}
@@ -421,12 +419,12 @@ class ptrack : public track {
 					break;
 			}
 #ifdef DEBUG
-			if (! skip) {
+			/*if (! skip) {
 				char buf[256];
 				ev.getDescription(buf, 256);
-				cerr << buf << endl;
+				cerr << "# " << buf << endl;
 				cerr << "remaining bytes: " << remaining << endl;
-			}
+			}*/
 #endif
 			if (! skip) {
 				if (ev.getCommand() != CMD_NOTE_OFF)
@@ -557,7 +555,7 @@ class pmidi {
 
 #ifdef DEBUG
 		uint16_t ff = getFileFormat();
-		cerr << "File format: " << FILE_FORMAT[ff] << endl;
+		cerr << "# File format: " << FILE_FORMAT[ff] << endl;
 #endif
 
 		uint16_t tracksCount = getUint16_t(header, 10);
@@ -566,8 +564,8 @@ class pmidi {
 		tpq = getUint16_t(header, 12);
 
 #ifdef DEBUG
-		cerr << "Tracks count: " << tracksCount << endl;
-		cerr << "Ticks per quarter note: " << tpq << endl;
+		cerr << "# Tracks count: " << tracksCount << endl;
+		cerr << "# Ticks per quarter note: " << tpq << endl;
 #endif
 
 		for (unsigned i = 0; i < tracksCount; ++i)
