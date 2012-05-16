@@ -75,6 +75,16 @@ uint32_t getUint24_t(ifstream &in) {
 	return result;
 }
 
+uint32_t getUint24_t(uint8_t * in) {
+	uint32_t result = 0;
+	for (int i = 0; i < 3; ++i) {
+		result <<= 8;
+		result |= in[i];
+	}
+	return result;
+}
+
+
 class pevent : public event {
 	public:
 
@@ -307,15 +317,11 @@ class ptrack : public track {
 				case CMD_META_EVENT:
 					in.read((char *) rawbuf + 1 + runningMode, 2 - runningMode);
 					remaining -= 2 - runningMode;
+					in.read((char *) rawbuf + 3, rawbuf[2]);
 					if (rawbuf[1] == META_TEMPO_CHANGE) {
 						// Handle tempo change.
-						uint32_t mspq = getUint24_t(in); // microsec per quarter note
-						//in.read((char *) rawbuf + 3, rawbuf[2]);
+						uint32_t mspq = getUint24_t(rawbuf + 3); // microsec per quarter note
 						thisTracktempo.addTempoMark(ev.start, ((double) mspq) / ((double) tpq));
-					}
-					else {
-						if (rawbuf[2] > 0)
-							in.read((char *) rawbuf + 3, rawbuf[2]);
 					}
 					remaining -= rawbuf[2];
 					ev.setRaw(rawbuf, rawbuf + 3 + rawbuf[2]);
@@ -329,11 +335,6 @@ class ptrack : public track {
 			}
 #ifdef DEBUG
 			if (! skip) {
-				pevent z;
-				z = ev;
-				//assert (z.rawlen > 0);
-				assert (z.rawlen == ev.rawlen);
-				assert (strncmp((char *) z.raw, (char *) ev.raw, ev.rawlen) == 0);
 				cerr << "Event type: " << cmd2str[ev.getCommand()];
 				cerr << ", start: " << ev.start;
 				if (ev.getCommand() == CMD_META_EVENT) {
