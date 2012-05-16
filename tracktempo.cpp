@@ -77,8 +77,8 @@ class ptracktempo {
 		return total;
 	}
 	
-	tick_t nextTempoMarkAfter(tick_t tick) {
-		list<tTempoMark>::iterator it = tempoList.begin();
+	tick_t nextTempoMarkAfter(tick_t tick) const {
+		__typeof__(tempoList.begin()) it = tempoList.begin();
 		while(it != tempoList.end() && it->first <= tick) {
 			it++;
 		}
@@ -88,8 +88,8 @@ class ptracktempo {
 		else return 0;
 	}
 	
-	double readTempoMark(tick_t tick) {
-		list<tTempoMark>::iterator it = tempoList.end();
+	double readTempoMark(tick_t tick) const {
+		__typeof__(tempoList.end()) it = tempoList.end();
 		do {
 			it--;
 		} while (it->first > tick);
@@ -122,7 +122,7 @@ void tracktempo::delTempoMark(tick_t tick)
 	{ return ((ptracktempo *)p)->delTempoMark(tick); }
 double tracktempo::getTickTime(tick_t tick) const
 	{ return ((ptracktempo *)p)->getTickTime(tick); }
-tick_t tracktempo::nextTempoMarkAfter(tick_t tick)
+tick_t tracktempo::nextTempoMarkAfter(tick_t tick) const
 	{ return ((ptracktempo *)p)->nextTempoMarkAfter(tick); }
-double tracktempo::readTempoMark(tick_t tick)
+double tracktempo::readTempoMark(tick_t tick) const
 	{ return ((ptracktempo *)p)->readTempoMark(tick); }

@@ -47,13 +47,13 @@ bool run(char ** params) {
 			}
 		} else if (m) {
 			#ifdef DEBUG
-				cerr << "Saving output file '" << p << "'..." << endl;
+				cerr << "# Saving output file '" << p << "'..." << endl;
 			#endif
 			m->save(p.c_str());
 			saved = true;
 		} else {
 			#ifdef DEBUG
-				cerr << "Reading file'" << p << "'..." << endl;
+				cerr << "# Reading file'" << p << "'..." << endl;
 			#endif
 			try {
 				m = new midi(p.c_str());
@@ -71,7 +71,7 @@ bool run(char ** params) {
 
 int main(int argc, char ** argv) {
 	#ifdef DEBUG
-		cerr << "Warning! This is a debug build." << endl;
+		cerr << "# Warning! This is a debug build." << endl;
 	#endif
 	try {
 		return run(argv+1) ? 0 : 1;
