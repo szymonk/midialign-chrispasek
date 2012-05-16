@@ -37,5 +37,8 @@ int main(void) {
 	if ( T.readTempoMark(5) != 1.0) { printf("1.0 == %lf Test failed\n",T.readTempoMark(5)); return 1; } 
 	if ( T.readTempoMark(6) != 1.0) { printf("1.0 == %lf Test failed\n",T.readTempoMark(6)); return 1; } 
 
+	tracktempo S(1.0);
+	//~ if ( T!=S ) { printf("T==S\n"); return 1; }
+
 	return 0;
 }
