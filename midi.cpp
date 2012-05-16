@@ -190,14 +190,13 @@ class pevent : public event {
 
 	void getDescription(char * buffer, unsigned int length) const {
 		stringstream ss(stringstream::in | stringstream::out);
+		ss.setf(ios::showbase);
 		ss << cmd2str[getCommand()];
 		if (isNote()) {
-			ss.setf(ios::hex, ios::basefield);
-			ss << ", pitch: " << raw[2];
+			ss << ", pitch: " << hex << (int) raw[1];
 		}
 		if (getCommand() == CMD_META_EVENT) {
-			ss.setf(ios::hex, ios::basefield);
-			ss << ", meta command: " << (int) raw[1];
+			ss << ", meta command: " << hex << (int) raw[1];
 			if (getMetaCommand() == META_TEMPO_CHANGE) {
 				ss << ", META_TEMPO_CHANGE";
 			}
