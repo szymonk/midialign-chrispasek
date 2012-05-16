@@ -49,7 +49,9 @@ const char * cmd2str[] = {
 
 using namespace std;
 
-inline uint16_t getUint16_t(uint8_t * ptr, int offset) {
+class pmidi; // announce
+
+inline uint16_t getUint16_t(const uint8_t * ptr, int offset) {
 	ptr += offset;
 	uint16_t v = *((uint16_t *) ptr);
 	return ((v << 8) | (v >> 8));
@@ -99,6 +101,7 @@ void printUint32_t(uint32_t val, ostream& out) {
 		//out << (val & 0x000000FF);
 	}
 }
+
 
 class pevent : public event {
 	public:
@@ -501,6 +504,8 @@ class ptrack : public track {
 		return eventsCol.size();
 	}
 
+	friend class pmidi;
+
 	private:
 
 	vector<pevent> eventsCol;
@@ -522,7 +527,7 @@ class pmidi {
 			throw "Incorrect header length.";
 
 #ifdef DEBUG
-		uint16_t ff = getUint16_t(header, 8);
+		uint16_t ff = getFileFormat();
 		cerr << "File format: " << FILE_FORMAT[ff] << endl;
 #endif
 
@@ -539,6 +544,20 @@ class pmidi {
 		for (unsigned i = 0; i < tracksCount; ++i)
 			t[i].load(in, tpq);
 
+		if (getFileFormat() == 1) {
+			tracktempo mergedTracktempo(0.0);
+			for (unsigned i = 0; i < tracksCount; ++i) {
+				tick_t tempoMark = 0;
+				do
+				{
+					double secPerTick = t[i].getTrackTempo().readTempoMark(tempoMark);
+					mergedTracktempo.addTempoMark(0, secPerTick);
+					tempoMark = t[i].getTrackTempo().nextTempoMarkAfter(tempoMark);
+				} while (tempoMark != 0);
+			}
+			for (unsigned i = 0; i < tracksCount; ++i)
+				t[i].thisTracktempo = mergedTracktempo;
+		}
 
 		in.close();
 	}
@@ -566,6 +585,10 @@ class pmidi {
 
 	unsigned int trackCount() const {
 		return t.size();
+	}
+
+	uint16_t getFileFormat() const {
+		return getUint16_t(header, 8);
 	}
 
 	private:

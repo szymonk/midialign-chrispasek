@@ -12,8 +12,8 @@ class tracktempo {
 		void addTempoMark(tick_t tick, double seconds_per_tick);
 		void delTempoMark(tick_t tick);
 		double getTickTime(tick_t tick) const;
-		tick_t nextTempoMarkAfter(tick_t tick);
-		double readTempoMark(tick_t tick);
+		tick_t nextTempoMarkAfter(tick_t tick) const;
+		double readTempoMark(tick_t tick) const;
 	private:
 		void * p;
 };
