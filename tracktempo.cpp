@@ -10,7 +10,7 @@
 
 using namespace std;
 
-typedef pair<unsigned int, double> tTempoMark;
+typedef pair<tick_t, double> tTempoMark;
 
 class ptracktempo {
 	public:
@@ -19,7 +19,7 @@ class ptracktempo {
 		tempoList.push_back(tTempoMark(0,seconds_per_tick));		// tick 0
 	}
 
-	void addTempoMark(unsigned int tick, double seconds_per_tick) {
+	void addTempoMark(tick_t tick, double seconds_per_tick) {
 		list<tTempoMark>::iterator it = tempoList.end();
 		it--;
 		while(it->first > tick) {
@@ -39,7 +39,7 @@ class ptracktempo {
 	#endif	
 	}
 
-	void delTempoMark(unsigned int tick) {
+	void delTempoMark(tick_t tick) {
 		if (tick == 0) {
 			return;
 		}
@@ -58,10 +58,10 @@ class ptracktempo {
 	#endif
 	}
 
-	double getTickTime(unsigned int tick) {
+	double getTickTime(tick_t tick) {
 		double total = 0.0;
 		list<tTempoMark>::iterator it = tempoList.begin();
-		unsigned int prev_tick = 0;
+		tick_t prev_tick = 0;
 		double prev_tempo = it->second;
 		it++;
 		while (it != tempoList.end() && it->first < tick) {
@@ -97,9 +97,9 @@ tracktempo & tracktempo::operator=(const tracktempo & rhs) {
 	p = new ptracktempo(*((ptracktempo *)rhs.p));
 	return *this;
 }
-void tracktempo::addTempoMark(unsigned int tick, double seconds_per_tick)
+void tracktempo::addTempoMark(tick_t tick, double seconds_per_tick)
 	{ return ((ptracktempo *)p)->addTempoMark(tick, seconds_per_tick); }
-void tracktempo::delTempoMark(unsigned int tick)
+void tracktempo::delTempoMark(tick_t tick)
 	{ return ((ptracktempo *)p)->delTempoMark(tick); }
-double tracktempo::getTickTime(unsigned int tick) const
+double tracktempo::getTickTime(tick_t tick) const
 	{ return ((ptracktempo *)p)->getTickTime(tick); }
